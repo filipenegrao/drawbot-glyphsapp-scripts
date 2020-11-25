@@ -1,43 +1,49 @@
-# A primeira coisa é importar o GlyphsApp para dentro do Drawbot, para que eles conversem
+'''
+This script was written to work inside DrawBot for Glyphs App.
+You can install it usign Window > Plugin Manager or from the source:
+https://github.com/schriftgestalt/DrawBotGlyphsPlugin
+
+'''
+
+# The first thing to be done is export GlyphsApp inside the
+# Drawbot, so they can talk to each other
 from GlyphsApp import *
 
-# agora, pegamos a fonte atual, aberta
+# Now, we get the font that is opened in Glyphs
 my_font = Glyphs.font
 
-# precisamos descobrir o UPM da fonte, para definir a altura da página
-# mas é possível definir qualquer tamanho de página que vc quiser.
+# We need to find the UPM so we can define the height of the page
 UPM = my_font.upm
 
-# também precisamos do valor dos descendentes da fonte,
-# já que o Drawbot tem o ponto 0,0 no canto inferior esquerdo.
-# O nosso ponto 0,0 precisa ser, na verdade, o ponto em que o glifo comecará a ser desenhado.
-# Ou seja: (x_origem, y_origem) precisam ser igual a (margem esquerda, descendente) 
+# The descender's value is also need, since DrawBot
+# has the origin point 0,0 on the inferior left side.  
+# So, the 0,0 needs to point to (LSB, descender)
 D = my_font.masters[0].descender
 
-# para cada glifo dentro da fonte aberta:    
+# For each glyph in the open font:    
 for glyph in my_font.glyphs:
-    # l = descobrimos a margem esquerda
+    # l = left margin
     l = glyph.layers[0].LSB
-    # r = descobrimos a margem direita
+    # r = right margin
     r = glyph.layers[0].RSB
-    # w = descobrimos a largura do glifo
+    # w = the width of the glyph
     w = glyph.layers[0].width
-    # bd = descobrimos os limites do glifo, nesta caso, a altura máxima que o glifo tem quando selecionado.
+    # bd = the boundaries of the glyph, to pick the height
     bd = glyph.layers[0].bounds.size.height
     
-    # Se a altura do glifo, somando o valor das descendentes for menor do que o UPM,
-    # fazemos uma página do mesmo valor do UPM
+
+    # If the height of the glyphs + descenders are less than the UPM, the
+    # page should be the same size of the UPM
     if bd+(-D) < UPM:
         newPage(w+l+r, UPM)
-    # Do contrário, fazemos uma página que tem a altura do descendente + o tamanho do bound
+    # Otherwise, we make the descenders height + the boundaries of the glyph
     else:
         newPage(w+l+r, bd+(-D))
         
-    # fill é a cor, neste caso 0 é preto
+    # fill colour = 0, meaning black.
     fill(0)
     
-    # translate move o objeto (no caso, cada glifo) para um ponto x, y.
-    # x aqui é igual à margem esquerda e y ao valor das descendentes. 
+    # move the glyph to the 0,0 point
     translate(x=l, y=-D)
     
     for thisInstance in my_font.instances:
@@ -45,15 +51,12 @@ for glyph in my_font.glyphs:
         instanceGlyph = instanceFont.glyphForName_(glyph.name)
         instanceLayer = instanceGlyph.layers[instanceFont.fontMasterID()]
         
-        # completeBezierPath inclui todos os paths dentro de uma instância, dentro de um glifo,
-        # incluindo eventuais componentes
+        # completeBezierPath includes all paths within the instances inside a glyph,
+        # including components
         drawPath(instanceLayer.completeBezierPath)
         
-        # salva da glifo em um arquivo png no desktop.
-        # Importante: neste caso eu estou assumindo que existe um folder no desktop
-        # chamado 'fontname' (que pode ser qualquer nome)
-        # dá pra jogar os arquivos em qualquer lugar e criar o folder automaticamente se ele
-        # não existir, mas agora estou com preguiça de escrever isso :)
+        # save the glyphs in a png in the desktop.
+        # Important: in this case, I'm assuming that there is a folder on the desktop that
+        # is called 'fontname'
         saveImage("~/Desktop/fontname/{0}.png".format(glyph.name)) 
-        
-    
+
